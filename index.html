@@ -1,0 +1,546 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Bird Hunter</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">
+<style>
+/* Layout: satu kolom sempit seperti layar game di ponsel. Menu -> arena langit (burung) -> panel jawaban. Satu tema siang hari yang sengaja tidak mengikuti mode gelap. */
+:root{
+  --sky-1:#7ccbf6; --sky-2:#e3f6ff; --ink:#14365a; --ink-soft:#4a6785;
+  --leaf:#34a874; --leaf-dark:#23805a; --sun:#ffc83d; --sun-dark:#d99a00;
+  --coral:#ff6154; --coral-dark:#c4443a; --card:#ffffff; --line:#c9e4f4;
+  --good:#1f9d62; --good-bg:#dff6ea; --bad:#c9443b; --bad-bg:#ffe6e3;
+  --fd:'Fredoka','Trebuchet MS',system-ui,sans-serif;
+  --fb:'Nunito','Segoe UI',system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{
+  background-color:#e3f6ff;
+  background-image:linear-gradient(180deg,#7ccbf6 0,#bfe8fb 280px,#e3f6ff 640px);
+  background-repeat:no-repeat;
+  color:var(--ink); font-family:var(--fb); font-size:16px; line-height:1.4; min-height:100%;
+  padding-block:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+button{font:inherit;color:inherit}
+.app{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+
+.btn{font-family:var(--fd);font-weight:600;font-size:1.25rem;min-height:52px;padding:.6rem 1.5rem;border:0;border-radius:999px;background:var(--coral);color:#fff;box-shadow:0 5px 0 var(--coral-dark);cursor:pointer;touch-action:manipulation}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--coral-dark)}
+.btn.green{background:var(--leaf);box-shadow:0 5px 0 var(--leaf-dark)}
+.btn.green:active{box-shadow:0 2px 0 var(--leaf-dark)}
+.btn.small{font-size:1rem;min-height:44px;padding:.35rem 1rem}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
+.btn.ghost:active{box-shadow:0 1px 0 var(--line)}
+button:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+
+/* Menu */
+.hero{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px 0 4px}
+.hero-birds{display:flex;gap:6px;align-items:flex-end;height:64px}
+.hero-birds svg{width:64px;height:auto;animation:bob 2.4s ease-in-out infinite}
+.hero-birds svg:nth-child(2){animation-delay:.4s;width:78px}
+.hero-birds svg:nth-child(3){animation-delay:.8s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+h1{font-family:var(--fd);font-weight:700;font-size:clamp(2.8rem,12vw,4.4rem);line-height:1;margin:0;color:#fff;letter-spacing:.01em;text-shadow:0 4px 0 var(--ink),2px 2px 0 var(--ink),-2px 2px 0 var(--ink)}
+.ribbon{margin:0;font-family:var(--fd);font-weight:600;font-size:1.25rem;background:var(--sun);color:var(--ink);padding:.3rem 1.2rem;border-radius:10px;box-shadow:0 4px 0 var(--sun-dark)}
+.lead{margin:2px 0 6px;max-width:30ch;font-weight:700;color:var(--ink-soft);font-size:1.05rem}
+.sec{font-family:var(--fd);font-weight:600;font-size:1.3rem;margin:6px 0 0}
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
+.lv{display:flex;gap:12px;align-items:center;text-align:left;background:var(--card);border:3px solid var(--line);border-radius:20px;padding:12px 14px;cursor:pointer;box-shadow:0 5px 0 var(--line);touch-action:manipulation;min-width:0}
+.lv:active{transform:translateY(3px);box-shadow:0 2px 0 var(--line)}
+.lv .no{flex:none;width:44px;height:44px;border-radius:50%;background:var(--leaf);color:#fff;font:700 1.5rem/44px var(--fd);text-align:center}
+.lv .lt{display:flex;flex-direction:column;min-width:0}
+.lv b{font-family:var(--fd);font-weight:600;font-size:1.15rem}
+.lv small{color:var(--ink-soft);font-weight:700}
+.st{display:flex;gap:2px;margin-top:4px}
+.st svg{width:22px;height:22px}
+
+/* Game */
+.topbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.chip{font-family:var(--fd);font-weight:600;background:#fff;border-radius:999px;padding:.3rem 1rem;border:2px solid var(--line)}
+.tools{display:flex;gap:8px;align-items:center}
+.tot{display:flex;align-items:center;gap:4px;font-family:var(--fd);font-weight:700;font-size:1.2rem;background:#fff;border-radius:999px;padding:.15rem .8rem .15rem .5rem;border:2px solid var(--line)}
+.tot svg{width:24px;height:24px}
+.qcard{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;background:var(--card);border-radius:22px;padding:14px 16px;box-shadow:0 5px 0 var(--line)}
+.qt{min-width:0}
+.qmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-weight:800;font-size:.85rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em}
+.dots{display:flex;gap:5px}
+.dots i{width:12px;height:12px;border-radius:50%;background:var(--line);display:block}
+.dots i.on{background:var(--sun);box-shadow:0 0 0 2px var(--sun-dark)}
+.dots i.ok{background:var(--leaf)}
+.qt h2{font-family:var(--fd);font-weight:600;font-size:clamp(1.4rem,5.5vw,1.9rem);line-height:1.15;margin:4px 0 2px;text-wrap:balance}
+.qt p{margin:0;color:var(--ink-soft);font-weight:700}
+.icon{flex:none;width:48px;height:48px;border-radius:50%;border:2px solid var(--line);background:#fff;display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
+.icon svg{width:26px;height:26px}
+
+.stage{position:relative;height:clamp(290px,64vw,430px);border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#8fd5fa 0,#cdeefd 62%,#eaf9ff 100%);box-shadow:0 6px 0 rgba(20,54,90,.18);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.stage.hunt{cursor:crosshair}
+.sun{position:absolute;top:7%;right:7%;width:46px;height:46px;border-radius:50%;background:var(--sun);box-shadow:0 0 0 10px rgba(255,200,61,.32)}
+.cloud{position:absolute;height:22px;width:86px;border-radius:999px;background:#fff;opacity:.9;animation:drift 38s linear infinite}
+.cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.cloud::before{width:38px;height:38px;left:14px;top:-18px}
+.cloud::after{width:28px;height:28px;left:44px;top:-12px}
+.c1{top:14%;left:-120px}
+.c2{top:40%;left:-120px;animation-delay:-18s;transform:scale(.8)}
+@keyframes drift{to{transform:translateX(calc(100vw + 260px))}}
+.hill{position:absolute;bottom:-34px;border-radius:50%}
+.h1{left:-12%;width:68%;height:84px;background:#58c28b}
+.h2{right:-14%;width:76%;height:100px;background:var(--leaf)}
+.field{position:absolute;inset:0}
+.branch{position:absolute;left:6%;right:6%;height:9px;border-radius:9px;background:#8a5a3b;box-shadow:0 3px 0 #6d4429}
+.perch,.flyer{position:absolute;width:clamp(54px,14%,84px);padding:0;border:0;background:none;cursor:pointer;transform:translate(-50%,-50%);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.perch::after,.flyer::after{content:"";position:absolute;inset:-8px}
+.perch{animation:perch 2.2s ease-in-out infinite;animation-delay:var(--d,0s)}
+@keyframes perch{0%,100%{transform:translate(-50%,-50%)}50%{transform:translate(-50%,-58%)}}
+.dir{display:block;transform:scaleX(var(--dir,1))}
+.bsvg{display:block;width:100%;height:auto}
+.inner{display:block;position:relative;transition:transform .35s,opacity .35s}
+.caught .inner{transform:scale(.1) rotate(60deg);opacity:0}
+.shake .inner{animation:shake .45s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px) rotate(-6deg)}40%{transform:translateX(9px) rotate(6deg)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.badge{position:absolute;top:-8px;right:-4px;min-width:30px;height:30px;border-radius:50%;background:var(--sun);color:var(--ink);font:700 1.1rem/30px var(--fd);text-align:center;box-shadow:0 0 0 3px #fff,0 3px 0 3px var(--sun-dark);z-index:2}
+.perch.counted .inner{filter:drop-shadow(0 0 6px rgba(255,200,61,.95))}
+.num{position:absolute;top:56%;transform:translate(-50%,-50%);width:1.9em;height:1.9em;border-radius:50%;background:#fff;color:var(--ink);font:700 1.15rem/1.9em var(--fd);text-align:center;box-shadow:0 2px 0 rgba(20,54,90,.28);pointer-events:none}
+.stage.done .flyer{opacity:0;pointer-events:none;transition:opacity .5s}
+.counter{position:absolute;left:10px;top:10px;font-family:var(--fd);font-weight:600;background:rgba(255,255,255,.85);border-radius:999px;padding:.1rem .8rem;z-index:3}
+
+.tray{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;background:#fff;border-radius:18px;padding:10px;box-shadow:0 4px 0 var(--line)}
+.slot{width:36px;height:30px;display:block;filter:grayscale(1);opacity:.28;transition:opacity .25s,filter .25s,transform .25s}
+.slot.on{filter:none;opacity:1;transform:scale(1.12)}
+.answers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.opt{font-family:var(--fd);font-weight:700;font-size:2.4rem;line-height:1;min-height:80px;border-radius:20px;border:3px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;box-shadow:0 5px 0 var(--line);touch-action:manipulation}
+.opt:active{transform:translateY(3px);box-shadow:0 2px 0 var(--line)}
+.opt.right{background:var(--good);border-color:var(--good);color:#fff;box-shadow:0 5px 0 #14774a}
+.opt.wrong{background:var(--bad-bg);border-color:var(--bad);color:var(--bad);animation:shake .45s;box-shadow:none}
+.opt:disabled{cursor:default}
+.recount{align-self:center}
+.fb{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;min-height:60px;padding:10px 14px;border-radius:18px;background:rgba(255,255,255,.75);font-weight:800}
+.fb.good{background:var(--good-bg);color:#14633f}
+.fb.bad{background:var(--bad-bg);color:#8f2c25}
+.fb span{flex:1 1 180px;min-width:0}
+
+/* Dialog */
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(20,54,90,.6);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow:auto}
+.dialog{background:#fff;border-radius:28px;padding:26px 22px;max-width:420px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;box-shadow:0 8px 0 rgba(20,54,90,.25)}
+.dialog h2{font-family:var(--fd);font-weight:700;font-size:2rem;line-height:1.1;margin:0;text-wrap:balance}
+.dialog p{margin:0;font-weight:700;color:var(--ink-soft);font-size:1.05rem}
+.bigstars{display:flex;gap:6px}
+.bigstars svg{width:64px;height:64px;animation:pop .5s both}
+.bigstars svg:nth-child(2){animation-delay:.15s}
+.bigstars svg:nth-child(3){animation-delay:.3s}
+@keyframes pop{from{transform:scale(0) rotate(-40deg)}to{transform:scale(1) rotate(0)}}
+.dbtns{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:6px}
+
+@media (max-width:380px){
+  .opt{font-size:2rem;min-height:72px}
+  .answers{gap:8px}
+}
+@media (prefers-reduced-motion:reduce){
+  .cloud,.perch,.hero-birds svg,.bigstars svg{animation:none}
+  .inner{transition:none}
+}
+</style>
+
+<div class="app">
+
+  <section id="screen-start">
+    <div class="hero">
+      <div class="hero-birds" id="heroBirds" aria-hidden="true"></div>
+      <h1>Bird Hunter</h1>
+      <p class="ribbon">Pemburu Target Cerdas</p>
+      <p class="lead">Matematika kelas 1: berhitung sampai 10. Ada 4 level, tiap level 3 soal.</p>
+      <button class="btn" id="play">Mulai Main</button>
+    </div>
+    <h2 class="sec">Pilih level</h2>
+    <div class="levels" id="levels"></div>
+  </section>
+
+  <section id="screen-game" hidden>
+    <div class="topbar">
+      <button class="btn small ghost" id="home">Menu</button>
+      <div class="chip" id="chip"></div>
+      <div class="tools">
+        <div class="tot" id="tot" aria-label="Total bintang"></div>
+        <button class="btn small ghost" id="snd" aria-pressed="true">Suara: Nyala</button>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qt">
+        <div class="qmeta"><span id="qn"></span><span class="dots" id="dots"></span></div>
+        <h2 id="qmain"></h2>
+        <p id="qsub"></p>
+      </div>
+      <button class="icon" id="listen" aria-label="Dengarkan soal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#14365a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h4l5 4v-13l-5 4z" fill="#ffc83d"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+      </button>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="sun"></div>
+      <div class="cloud c1"></div>
+      <div class="cloud c2"></div>
+      <div class="hill h1"></div>
+      <div class="hill h2"></div>
+      <div class="field" id="field"></div>
+    </div>
+
+    <div class="tray" id="tray" hidden></div>
+    <div class="answers" id="answers" hidden></div>
+    <button class="btn small ghost recount" id="recount" hidden>Hitung dari awal</button>
+
+    <div class="fb" id="fb" role="status" aria-live="polite">
+      <span id="fbtext"></span>
+      <button class="btn green small" id="next" hidden>Lanjut</button>
+    </div>
+  </section>
+
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dtitle">
+    <div class="bigstars" id="dstars"></div>
+    <h2 id="dtitle"></h2>
+    <p id="dtext"></p>
+    <div class="dbtns">
+      <button class="btn" id="dprimary"></button>
+      <button class="btn ghost" id="dsecondary"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(s){return document.querySelector(s)};
+  var PAL = [['#ff6154','#c4443a'],['#3ec1ee','#2389b0'],['#ffc83d','#d99a00'],['#6fd48b','#3a9a55'],['#b08af0','#7a50c4'],['#ff9ecb','#cf5f8e']];
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var LEVELS = [
+    {name:'Burung di Dahan', sub:'Hitung 1 sampai 5', type:'count', lo:1, hi:6, items:[2,5,4]},
+    {name:'Kawanan Besar', sub:'Hitung 6 sampai 10', type:'count', lo:4, hi:10, items:[7,10,8]},
+    {name:'Jaring Pemburu', sub:'Tangkap burung sesuai angka', type:'catch', items:[4,6,9]},
+    {name:'Pemburu Cerdas', sub:'Angka sebelum dan sesudah', type:'number', items:[
+      {text:'Tangkap burung dengan angka setelah 6', ans:7, note:'Setelah 6 adalah 7.'},
+      {text:'Tangkap burung dengan angka sebelum 9', ans:8, note:'Sebelum 9 adalah 8.'},
+      {text:'Tangkap burung dengan angka di antara 4 dan 6', ans:5, note:'Di antara 4 dan 6 adalah 5.'}
+    ]}
+  ];
+
+  var S = {level:0,q:0,first:true,locked:false,earned:[0,0,0,0],best:[0,0,0,0],ans:0,n:0,caught:0,count:0,type:''};
+  var birds = [], raf = 0, last = 0, soundOn = true, ac = null;
+
+  /* ---------- helpers ---------- */
+  function bird(i){
+    var p = PAL[i % PAL.length];
+    return '<svg class="bsvg" viewBox="0 0 64 48" aria-hidden="true"><path d="M9 21 1 12l1 17z" fill="'+p[1]+'"/><ellipse cx="30" cy="27" rx="22" ry="15" fill="'+p[0]+'"/><ellipse cx="34" cy="33" rx="13" ry="7" fill="#fff" opacity=".45"/><circle cx="47" cy="18" r="10" fill="'+p[0]+'"/><path d="M56 16.5 64 20 56 23.5z" fill="#ff9f1c"/><circle cx="50.5" cy="16" r="2.3" fill="#14365a"/><circle cx="51.3" cy="15.2" r=".8" fill="#fff"/><path d="M16 25Q26 6 41 27Q28 35 16 25z" fill="'+p[1]+'"/></svg>';
+  }
+  function star(on){
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" fill="'+(on?'#ffc83d':'#d3e4ef')+'" stroke="'+(on?'#d99a00':'#b7cddb')+'" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+  }
+  function stars(n){var h='';for(var i=0;i<3;i++)h+=star(i<n);return h}
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+  function rnd(a,b){return a+Math.random()*(b-a)}
+  function total(){return S.earned.reduce(function(a,b){return a+b},0)}
+  function sumBest(){return S.best.reduce(function(a,b){return a+b},0)}
+
+  /* ---------- suara ---------- */
+  function tone(f,d,t,type,v){
+    if(!soundOn)return;
+    try{
+      ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+      var o=ac.createOscillator(), g=ac.createGain(), st=ac.currentTime+(t||0);
+      o.type=type||'sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(v||.14,st); g.gain.exponentialRampToValueAtTime(.001,st+d);
+      o.connect(g); g.connect(ac.destination); o.start(st); o.stop(st+d+.03);
+    }catch(e){}
+  }
+  var sfx = {
+    ok:function(){tone(523,.16,0);tone(659,.16,.12);tone(784,.3,.24)},
+    no:function(){tone(210,.28,0,'triangle',.12)},
+    pop:function(k){tone(420+(k||1)*45,.14,0,'triangle',.16)},
+    win:function(){[523,659,784,1047].forEach(function(f,i){tone(f,.22,i*.14)})}
+  };
+  function speak(t){
+    if(!soundOn)return;
+    try{
+      if(!('speechSynthesis' in window))return;
+      speechSynthesis.cancel();
+      var u=new SpeechSynthesisUtterance(t); u.lang='id-ID'; u.rate=.9; speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  /* ---------- menu ---------- */
+  function renderMenu(){
+    var h='';
+    LEVELS.forEach(function(L,i){
+      h+='<button class="lv" data-i="'+i+'"><span class="no">'+(i+1)+'</span><span class="lt"><b>'+L.name+'</b><small>'+L.sub+'</small><span class="st">'+stars(S.best[i])+'</span></span></button>';
+    });
+    $('#levels').innerHTML=h;
+  }
+  function show(id){
+    ['#screen-start','#screen-game'].forEach(function(s){$(s).hidden = (s!==id)});
+    window.scrollTo(0,0);
+  }
+  function goHome(){
+    stopLoop(); birds=[]; $('#overlay').hidden=true;
+    try{speechSynthesis.cancel()}catch(e){}
+    renderMenu(); show('#screen-start');
+  }
+
+  /* ---------- alur level ---------- */
+  function startLevel(i){
+    S.level=i; S.q=0; S.earned[i]=0;
+    $('#overlay').hidden=true;
+    show('#screen-game');
+    loadQ();
+  }
+  function setFb(msg,cls){
+    var fb=$('#fb'); fb.className='fb'+(cls?' '+cls:'');
+    $('#fbtext').textContent=msg; $('#next').hidden=true;
+  }
+  function renderDots(){
+    var h='';
+    for(var i=0;i<3;i++){h+='<i class="'+(i<S.q?'ok':(i===S.q?'on':''))+'"></i>'}
+    $('#dots').innerHTML=h;
+  }
+  function loadQ(){
+    var L=LEVELS[S.level]; stopLoop(); birds=[];
+    S.first=true; S.locked=false; S.type=L.type; S.caught=0; S.count=0;
+    var item=L.items[S.q];
+    $('#stage').classList.remove('done');
+    $('#stage').classList.toggle('hunt',L.type!=='count');
+    $('#chip').textContent='Level '+(S.level+1)+' dari 4';
+    $('#qn').textContent='Soal '+(S.q+1)+' dari 3';
+    $('#tot').innerHTML=star(true)+'<span>'+total()+'</span>';
+    renderDots();
+    $('#tray').hidden = L.type!=='catch';
+    $('#answers').hidden = L.type!=='count';
+    $('#recount').hidden = L.type!=='count';
+    var main,sub,say;
+    if(L.type==='count'){
+      S.n=item; S.ans=item;
+      main='Ada berapa burung?'; sub='Ketuk tiap burung untuk menghitung, lalu pilih jawabannya.';
+      say='Ada berapa burung? Ketuk tiap burung untuk menghitung, lalu pilih jawabannya.';
+      renderCount(item,L);
+    }else if(L.type==='catch'){
+      S.n=item; S.ans=item;
+      main='Tangkap '+item+' burung!'; sub='Ketuk burung yang terbang. Hitung sampai '+item+'.';
+      say='Tangkap '+item+' burung! Ketuk burung yang terbang.';
+      renderCatch(item);
+    }else{
+      S.ans=item.ans; S.item=item;
+      main=item.text; sub='Ketuk burung yang membawa angka yang benar.';
+      say=item.text+'. Ketuk burung yang membawa angka yang benar.';
+      renderNumber(item);
+    }
+    $('#qmain').textContent=main; $('#qsub').textContent=sub; S.say=say;
+    setFb('Ayo mulai berburu!','');
+    speak(say);
+  }
+
+  /* ---------- level 1-2: hitung burung ---------- */
+  function renderCount(n,L){
+    var rows = n<=5 ? [n] : [Math.ceil(n/2),Math.floor(n/2)];
+    var ys = rows.length===1 ? [44] : [27,61];
+    var idx=0, h='';
+    rows.forEach(function(k,r){
+      var gap=Math.min(20,76/k);
+      h+='<div class="branch" style="top:'+(ys[r]+9)+'%"></div>';
+      for(var j=0;j<k;j++){
+        var x=50+(j-(k-1)/2)*gap;
+        h+='<button class="perch" style="left:'+x+'%;top:'+ys[r]+'%;--d:'+((idx*0.37)%1.6).toFixed(2)+'s" data-i="'+idx+'" aria-label="Burung '+(idx+1)+'"><span class="inner"><span class="dir" style="--dir:'+(idx%2?-1:1)+'">'+bird(idx)+'</span><span class="badge" hidden></span></span></button>';
+        idx++;
+      }
+    });
+    h+='<div class="counter">Hitungan: <b id="cnt">0</b></div>';
+    $('#field').innerHTML=h;
+    var opts=[n], pool=[];
+    for(var v=L.lo; v<=L.hi; v++){ if(v!==n) pool.push(v) }
+    // pilihan salah dibuat dekat dengan jawaban agar anak benar-benar menghitung
+    pool.sort(function(a,b){return Math.abs(a-n)-Math.abs(b-n)||Math.random()-.5});
+    opts.push(pool[0],pool[1]);
+    shuffle(opts);
+    $('#answers').innerHTML=opts.map(function(v){return '<button class="opt" data-v="'+v+'">'+v+'</button>'}).join('');
+  }
+  $('#field').addEventListener('click',function(e){
+    if(S.type==='count'){
+      var p=e.target.closest('.perch'); if(!p||S.locked||p.classList.contains('counted'))return;
+      S.count++; p.classList.add('counted');
+      var b=p.querySelector('.badge'); b.textContent=S.count; b.hidden=false;
+      $('#cnt').textContent=S.count; sfx.pop(S.count); speak(String(S.count));
+    }else{
+      var el=e.target.closest('.flyer'); if(!el||S.locked)return;
+      var bd=birds.filter(function(x){return x.el===el})[0]; if(!bd||bd.gone)return;
+      if(S.type==='catch') catchBird(bd); else pickNumber(bd);
+    }
+  });
+  $('#answers').addEventListener('click',function(e){
+    var b=e.target.closest('.opt'); if(!b||S.locked||b.disabled)return;
+    var v=+b.dataset.v;
+    if(v===S.ans){
+      b.classList.add('right'); success('Tepat sekali! Ada '+v+' burung.');
+    }else{
+      b.classList.add('wrong'); b.disabled=true; S.first=false; sfx.no();
+      setFb('Belum tepat. Ketuk tiap burung untuk menghitung, lalu coba lagi.','bad');
+    }
+  });
+  $('#recount').addEventListener('click',function(){
+    if(S.type!=='count'||S.locked)return;
+    S.count=0; $('#cnt').textContent='0';
+    document.querySelectorAll('.perch').forEach(function(p){p.classList.remove('counted');p.querySelector('.badge').hidden=true});
+    setFb('Ayo hitung lagi dari awal.','');
+  });
+
+  /* ---------- burung terbang ---------- */
+  function spawn(list,lanesY){
+    var h='';
+    list.forEach(function(it,i){
+      h+='<button class="flyer" data-i="'+i+'" aria-label="'+(it.num?('Burung angka '+it.num):'Burung terbang')+'" style="--dir:'+it.dir+'"><span class="inner"><span class="dir">'+bird(i)+'</span>'+(it.num?'<span class="num" style="left:'+(it.dir===1?44:56)+'%">'+it.num+'</span>':'')+'</span></button>';
+    });
+    $('#field').innerHTML=h;
+    var els=$('#field').querySelectorAll('.flyer');
+    birds=list.map(function(it,i){
+      return {el:els[i],x:it.x,y:it.y,v:it.v*(reduce?.5:1),num:it.num,t:0,ph:rnd(0,6),gone:false};
+    });
+    last=0; raf=requestAnimationFrame(loop);
+  }
+  function loop(ts){
+    var dt=last?Math.min(.05,(ts-last)/1000):0; last=ts;
+    for(var i=0;i<birds.length;i++){
+      var b=birds[i]; if(b.gone)continue;
+      b.t+=dt; b.x+=b.v*dt;
+      b.x=((b.x+10)%120+120)%120-10;
+      b.el.style.left=b.x+'%';
+      b.el.style.top=(b.y+(reduce?0:Math.sin(b.t*2.2+b.ph)*1.6))+'%';
+    }
+    raf=requestAnimationFrame(loop);
+  }
+  function stopLoop(){ if(raf)cancelAnimationFrame(raf); raf=0 }
+
+  /* ---------- level 3: tangkap sejumlah burung ---------- */
+  function renderCatch(n){
+    var tot=n+3, lanes=tot>8?4:3;
+    var ys = lanes===4?[14,36,58,80]:[20,48,76];
+    var counts=[]; for(var l=0;l<lanes;l++)counts.push(0);
+    for(var i=0;i<tot;i++)counts[i%lanes]++;
+    var seen=[]; for(l=0;l<lanes;l++)seen.push(0);
+    var speeds=[7,8.5,6.5,9];
+    var list=[];
+    for(i=0;i<tot;i++){
+      var lane=i%lanes, k=seen[lane]++;
+      var dir=lane%2?-1:1;
+      list.push({x:(k/counts[lane])*120-10+rnd(0,3),y:ys[lane],v:dir*speeds[lane],dir:dir});
+    }
+    spawn(list);
+    var t=''; for(i=0;i<n;i++)t+='<span class="slot">'+bird(i)+'</span>';
+    $('#tray').innerHTML=t;
+  }
+  function catchBird(b){
+    b.gone=true; b.el.classList.add('caught');
+    S.caught++;
+    var slots=document.querySelectorAll('.slot'); if(slots[S.caught-1])slots[S.caught-1].classList.add('on');
+    sfx.pop(S.caught); speak(String(S.caught));
+    setFb('Tertangkap: '+S.caught+' dari '+S.n,'');
+    if(S.caught===S.n){
+      $('#stage').classList.add('done');
+      setTimeout(function(){ success('Hebat! Kamu menangkap tepat '+S.n+' burung.') },450);
+      S.locked=true;
+    }
+  }
+
+  /* ---------- level 4: angka sebelum dan sesudah ---------- */
+  function renderNumber(item){
+    var nums=[item.ans], pool=[];
+    for(var v=1;v<=10;v++){ if(v!==item.ans && !(item.ans===5 && (v===4||v===6))) pool.push(v) }
+    shuffle(pool); nums.push(pool[0],pool[1],pool[2]); shuffle(nums);
+    var ys=[14,36,58,80], list=[];
+    var speeds=shuffle([5,6,7,8]);
+    nums.forEach(function(n,i){
+      var dir=i%2?-1:1;
+      list.push({x:rnd(5,95),y:ys[i],v:dir*speeds[i],dir:dir,num:n});
+    });
+    spawn(list);
+  }
+  function pickNumber(b){
+    if(b.num===S.ans){
+      b.gone=true; b.el.classList.add('caught'); S.locked=true;
+      $('#stage').classList.add('done');
+      success('Betul! '+S.item.note);
+    }else{
+      b.el.classList.add('shake'); S.first=false; sfx.no();
+      setTimeout(function(){b.el.classList.remove('shake')},480);
+      setFb('Itu angka '+b.num+'. Coba cari burung yang lain.','bad');
+    }
+  }
+
+  /* ---------- jawaban benar ---------- */
+  function success(msg){
+    S.locked=true;
+    if(S.first)S.earned[S.level]++;
+    sfx.ok();
+    var fb=$('#fb'); fb.className='fb good'; $('#fbtext').textContent=msg;
+    var nx=$('#next'); nx.textContent = S.q<2 ? 'Soal berikutnya' : 'Selesai level'; nx.hidden=false;
+    var dots=document.querySelectorAll('#dots i'); if(dots[S.q])dots[S.q].className='ok';
+    $('#tot').innerHTML=star(true)+'<span>'+total()+'</span>';
+    speak(msg);
+    nx.focus({preventScroll:true});
+  }
+  $('#next').addEventListener('click',function(){
+    if(S.q<2){S.q++;loadQ()}else levelDone();
+  });
+
+  /* ---------- hasil ---------- */
+  function openDialog(n,title,text,pLabel,pFn,sLabel,sFn){
+    $('#dstars').innerHTML=stars(n);
+    $('#dtitle').textContent=title; $('#dtext').textContent=text;
+    var p=$('#dprimary'), s=$('#dsecondary');
+    p.textContent=pLabel; s.textContent=sLabel;
+    p.onclick=pFn; s.onclick=sFn;
+    $('#overlay').hidden=false; p.focus({preventScroll:true});
+  }
+  function levelDone(){
+    stopLoop();
+    var i=S.level, st=Math.max(1,S.earned[i]);
+    S.best[i]=Math.max(S.best[i],st);
+    var msgs=['','Terus berlatih, kamu pasti makin cerdas.','Bagus! Tinggal sedikit lagi sempurna.','Sempurna! Semua soal benar di percobaan pertama.'];
+    sfx.win();
+    var last = i===LEVELS.length-1;
+    openDialog(st,'Level '+(i+1)+' selesai!',msgs[st],
+      last?'Lihat hasil':'Lanjut ke Level '+(i+2),
+      function(){ if(last)finalDone(); else startLevel(i+1) },
+      'Ulangi level', function(){ startLevel(i) });
+  }
+  function finalDone(){
+    var t=sumBest(), name = t>=11?'Pemburu Cerdas':(t>=8?'Pemburu Hebat':'Pemburu Pemula');
+    var st = t>=11?3:(t>=8?2:1);
+    openDialog(st,'Kamu '+name+'!','Kamu mengumpulkan '+t+' dari 12 bintang. Hebat sudah berhitung sampai 10!',
+      'Main lagi', function(){ S.best=[0,0,0,0]; S.earned=[0,0,0,0]; startLevel(0) },
+      'Kembali ke menu', goHome);
+  }
+
+  /* ---------- tombol umum ---------- */
+  $('#play').addEventListener('click',function(){ startLevel(0) });
+  $('#levels').addEventListener('click',function(e){
+    var b=e.target.closest('.lv'); if(b)startLevel(+b.dataset.i);
+  });
+  $('#home').addEventListener('click',goHome);
+  $('#listen').addEventListener('click',function(){
+    var was=soundOn; soundOn=true; speak(S.say); soundOn=was;
+  });
+  $('#snd').addEventListener('click',function(){
+    soundOn=!soundOn;
+    this.textContent='Suara: '+(soundOn?'Nyala':'Mati');
+    this.setAttribute('aria-pressed',String(soundOn));
+    if(!soundOn){try{speechSynthesis.cancel()}catch(e){}}
+  });
+
+  /* ---------- mulai ---------- */
+  var hb=''; [0,1,2].forEach(function(i){hb+=bird([0,2,1][i])});
+  $('#heroBirds').innerHTML=hb;
+  renderMenu();
+})();
+</script>
+
+</body></html>
